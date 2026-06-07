@@ -3,7 +3,7 @@ import { defineConfig } from 'astro/config';
 
 // https://astro.build/config
 export default defineConfig({
-  site: process.env.ASTRO_SITE || 'http://localhost:4321',
-  base: process.env.ASTRO_BASE || '/',
+  site: 'https://t-450.github.io',
+  base: '/commandline-blog',
   output: 'static',
 });
