@@ -1,0 +1,178 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+  return posts.map(post => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+// Get related articles (excluding the current one)
+const allPosts = await getCollection('posts');
+const relatedPosts = allPosts
+  .filter(p => p.id !== post.id)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 2);
+---
+
+<Layout 
+  title={post.data.title} 
+  description={post.data.description} 
+  bodyClass="wp-singular post-template-default single single-post wp-theme-command-line microsoft-uhf"
+>
+  <main id="main-content">
+    <div class="article-hero">
+      {post.data.image && (
+        <img
+          src={post.data.image}
+          alt=""
+          aria-hidden="true"
+          class="hero-image"
+        />
+      )}
+      
+      <div class="article-tag-row">
+        <span class="article-tag">{post.data.tag}</span>
+        
+        <!-- Top Share Button -->
+        <div class="share-buttons" data-share>
+          <button class="share-trigger" type="button" aria-label="Share this article" aria-expanded="false" aria-controls="share-icons-1">Share</button>
+          <div class="share-icons" id="share-icons-1" aria-hidden="true">
+            <a class="share-btn" data-platform="linkedin" href="#" target="_blank" rel="noopener noreferrer" aria-label="Share on LinkedIn" title="Share on LinkedIn" tabindex="-1">in</a>
+            <a class="share-btn" data-platform="reddit" href="#" target="_blank" rel="noopener noreferrer" aria-label="Share on Reddit" title="Share on Reddit" tabindex="-1">r</a>
+            <a class="share-btn" data-platform="x" href="#" target="_blank" rel="noopener noreferrer" aria-label="Share on X" title="Share on X" tabindex="-1">x</a>
+            <a class="share-btn" data-platform="facebook" href="#" target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook" title="Share on Facebook" tabindex="-1">f</a>
+          </div>
+          <span class="sr-only" data-share-title={post.data.title}>{post.data.title}</span>
+        </div>
+      </div>
+
+      <h1 class="article-title">{post.data.title}</h1>
+      <p class="article-subtitle">{post.data.description}</p>
+      
+      <div class="article-authors">
+        By <span class="article-author-wrap">
+          <span class="article-author-anchor">
+            <a class="article-author-name" href="#">
+              <span class="article-author-label">{post.data.author}</span>
+            </a>
+            <span class="article-author-tooltip">
+              <span class="article-author-bio">Contributor, Command Line</span>
+            </span>
+          </span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Article Content -->
+    <div class="article-content">
+      <Content />
+    </div>
+
+    <!-- Bottom Share Button -->
+    <div class="article-bottom-share">
+      <div class="share-buttons" data-share>
+        <button class="share-trigger" type="button" aria-label="Share this article" aria-expanded="false" aria-controls="share-icons-2">Share</button>
+        <div class="share-icons" id="share-icons-2" aria-hidden="true">
+          <a class="share-btn" data-platform="linkedin" href="#" target="_blank" rel="noopener noreferrer" aria-label="Share on LinkedIn" title="Share on LinkedIn" tabindex="-1">in</a>
+          <a class="share-btn" data-platform="reddit" href="#" target="_blank" rel="noopener noreferrer" aria-label="Share on Reddit" title="Share on Reddit" tabindex="-1">r</a>
+          <a class="share-btn" data-platform="x" href="#" target="_blank" rel="noopener noreferrer" aria-label="Share on X" title="Share on X" tabindex="-1">x</a>
+          <a class="share-btn" data-platform="facebook" href="#" target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook" title="Share on Facebook" tabindex="-1">f</a>
+        </div>
+        <span class="sr-only" data-share-title={post.data.title}>{post.data.title}</span>
+      </div>
+    </div>
+
+    <!-- Next Stop / Related Articles -->
+    {relatedPosts.length > 0 && (
+      <section class="related-articles">
+        <h2 class="related-heading">Next Stop</h2>
+        <div class="related-grid">
+          {relatedPosts.map(rel => (
+            <a class="related-card" href={`/posts/${rel.id}`}>
+              <div class="related-card-header">
+                <h3 class="related-card-title">{rel.data.title}</h3>
+                <span class="related-card-tag">{rel.data.tag}</span>
+              </div>
+              <p class="related-card-subtitle">{rel.data.description}</p>
+              <span class="related-card-read">[ read ]</span>
+              <div class="related-card-divider"></div>
+              <span class="related-card-meta">
+                {rel.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+              </span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+  </main>
+</Layout>
+
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1. Share buttons functionality
+    const shareButtons = document.querySelectorAll('.share-buttons');
+    
+    shareButtons.forEach(container => {
+      const trigger = container.querySelector('.share-trigger');
+      const icons = container.querySelector('.share-icons');
+      const links = container.querySelectorAll('.share-btn');
+      const title = container.querySelector('[data-share-title]')?.getAttribute('data-share-title') || document.title;
+      const url = window.location.href;
+
+      if (trigger) {
+        trigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = container.classList.toggle('open');
+          trigger.setAttribute('aria-expanded', isOpen);
+          if (icons) {
+            icons.setAttribute('aria-hidden', !isOpen);
+          }
+          links.forEach(link => {
+            link.setAttribute('tabindex', isOpen ? '0' : '-1');
+          });
+        });
+      }
+
+      links.forEach(link => {
+        const platform = link.getAttribute('data-platform');
+        let shareUrl = '#';
+        if (platform === 'linkedin') {
+          shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+        } else if (platform === 'reddit') {
+          shareUrl = `https://reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
+        } else if (platform === 'x') {
+          shareUrl = `https://x.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`;
+        } else if (platform === 'facebook') {
+          shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+        }
+        link.setAttribute('href', shareUrl);
+      });
+    });
+
+    // Close share menus when clicking anywhere else
+    document.addEventListener('click', () => {
+      shareButtons.forEach(container => {
+        container.classList.remove('open');
+        const trigger = container.querySelector('.share-trigger');
+        const icons = container.querySelector('.share-icons');
+        const links = container.querySelectorAll('.share-btn');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        if (icons) icons.setAttribute('aria-hidden', 'true');
+        links.forEach(link => link.setAttribute('tabindex', '-1'));
+      });
+    });
+
+    // 2. Make site-footer visible
+    const footer = document.querySelector('.site-footer');
+    if (footer) {
+      footer.classList.add('visible');
+    }
+  });
+</script>

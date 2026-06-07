@@ -1,0 +1,180 @@
+---
+import { getCollection } from 'astro:content';
+
+const posts = await getCollection('posts');
+const searchData = posts.map(p => ({
+  title: p.data.title,
+  slug: p.slug,
+  subtitle: p.data.description,
+  date: p.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+  author: p.data.author,
+  tag: p.data.tag
+}));
+---
+
+<div class="header-wrapper">
+  <header style="transform:translateY(0)">
+    <div class="col-1">
+      <a class="site-logo" href="/" aria-label="Command Line">
+        <img class="site-logo-image" src="/logo.svg" alt="" aria-hidden="true" />
+      </a>
+    </div>
+    <div class="col-3">
+      <p class="tagline">
+        By builders, for builders.
+      </p>
+    </div>
+    <div class="col-5">
+      <div class="header-controls">
+        <button class="search-btn" type="button" aria-label="Search" aria-expanded="false" aria-controls="site-search"></button>
+        <button class="theme-toggle" type="button" aria-label="Toggle dark mode" aria-pressed="false"></button>
+        <span class="ms-logo-wrap" aria-label="Microsoft">
+          <span class="ms-logo">
+            <span class="ms-sq ms-sq-r"></span>
+            <span class="ms-sq ms-sq-g"></span>
+            <span class="ms-sq ms-sq-b"></span>
+            <span class="ms-sq ms-sq-y"></span>
+          </span>
+          <span class="ms-logo-tooltip">A Microsoft publication</span>
+        </span>
+      </div>
+    </div>
+    <div class="progress-container" aria-hidden="true">
+      <div class="progress-bar" aria-hidden="true"></div>
+    </div>
+  </header>
+</div>
+
+<div class="search-dropdown" id="site-search" role="search" hidden>
+  <label class="sr-only" for="site-search-input">Search articles</label>
+  <input class="search-input" id="site-search-input" type="search" placeholder="Search articles..." autocomplete="off" aria-controls="site-search-results" />
+  <div class="search-results" id="site-search-results" aria-live="polite"></div>
+</div>
+
+<script is:inline define:vars={{ searchData }}>
+  document.addEventListener('DOMContentLoaded', () => {
+    const searchBtn = document.querySelector('.search-btn');
+    const themeToggle = document.querySelector('.theme-toggle');
+    const siteSearch = document.getElementById('site-search');
+    const searchInput = document.getElementById('site-search-input');
+    const searchResults = document.getElementById('site-search-results');
+    const progressBar = document.querySelector('.progress-bar');
+
+    // 1. Theme Toggle
+    if (themeToggle) {
+      const isDark = document.body.classList.contains('dark');
+      themeToggle.setAttribute('aria-pressed', isDark);
+
+      themeToggle.addEventListener('click', () => {
+        const currentlyDark = document.body.classList.toggle('dark');
+        themeToggle.setAttribute('aria-pressed', currentlyDark);
+        localStorage.setItem('theme', currentlyDark ? 'dark' : 'light');
+      });
+    }
+
+    // 2. Search Box Position
+    function positionSearch() {
+      if (!siteSearch || !searchBtn) return;
+      if (window.innerWidth >= 768) {
+        const btnRect = searchBtn.getBoundingClientRect();
+        siteSearch.style.top = `${btnRect.bottom + window.scrollY + 10}px`;
+        siteSearch.style.left = `${btnRect.right + window.scrollX - 360}px`;
+      } else {
+        siteSearch.style.top = '';
+        siteSearch.style.left = '';
+      }
+    }
+
+    // 3. Search Actions
+    if (searchBtn && siteSearch) {
+      searchBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isExpanded = searchBtn.getAttribute('aria-expanded') === 'true';
+        searchBtn.setAttribute('aria-expanded', !isExpanded);
+        siteSearch.toggleAttribute('hidden');
+        if (!isExpanded) {
+          positionSearch();
+          if (searchInput) {
+            searchInput.focus();
+            performSearch();
+          }
+        }
+      });
+
+      // Close search when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!siteSearch.contains(e.target) && !searchBtn.contains(e.target)) {
+          siteSearch.setAttribute('hidden', '');
+          searchBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      // Close search on Escape
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          siteSearch.setAttribute('hidden', '');
+          searchBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      window.addEventListener('resize', positionSearch);
+    }
+
+    // 4. Search Filter
+    if (searchInput && searchResults) {
+      searchInput.addEventListener('input', performSearch);
+
+      function performSearch() {
+        const query = searchInput.value.toLowerCase().trim();
+        if (!query) {
+          searchResults.innerHTML = '';
+          return;
+        }
+
+        const filtered = searchData.filter(post => 
+          post.title.toLowerCase().includes(query) ||
+          post.subtitle.toLowerCase().includes(query) ||
+          post.author.toLowerCase().includes(query) ||
+          (post.tag && post.tag.toLowerCase().includes(query))
+        );
+
+        if (filtered.length === 0) {
+          searchResults.innerHTML = '<div class="search-empty">No results found</div>';
+          return;
+        }
+
+        searchResults.innerHTML = filtered.map(post => `
+          <a class="search-result" href="/posts/${post.slug}">
+            <div class="search-result-title">${escapeHTML(post.title)}</div>
+            <div class="search-result-meta">${post.date} • ${escapeHTML(post.tag || '')} • By ${escapeHTML(post.author)}</div>
+          </a>
+        `).join('');
+      }
+
+      function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, 
+          tag => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+          }[tag] || tag)
+        );
+      }
+    }
+
+    // 5. Reading Progress Bar
+    window.addEventListener('scroll', () => {
+      if (!progressBar) return;
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (docHeight > 0) {
+        const progress = (scrollTop / docHeight) * 100;
+        progressBar.style.width = `${progress}%`;
+      } else {
+        progressBar.style.width = '0%';
+      }
+    });
+  });
+</script>

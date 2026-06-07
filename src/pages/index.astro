@@ -1,0 +1,245 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+// Get all posts and sort by date descending
+const posts = await getCollection('posts');
+const sortedPosts = posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+// Divide into featured (first 6) and remaining
+const featuredPosts = sortedPosts.slice(0, 6);
+const remainingPosts = sortedPosts.slice(6);
+---
+
+<Layout title="Home" bodyClass="wp-singular post-template-default single single-post wp-theme-command-line">
+  <main id="main-content">
+    <div class="home-main">
+      <!-- Filters Sidebar -->
+      <div class="filters">
+        <button class="filter-toggle" type="button" aria-expanded="false" aria-controls="filter-menu">
+          <span class="filter-toggle-label">Topic</span>
+          <span class="filter-toggle-current">All</span>
+          <span class="filter-toggle-icon"></span>
+        </button>
+        
+        <div class="filter-menu" id="filter-menu">
+          <fieldset class="filter-fieldset">
+            <legend class="filter-title">Topics</legend>
+            <ul class="filter-list">
+              <li>
+                <label>
+                  <input type="radio" name="topic" value="all" checked />
+                  <span class="filter-option-label">All</span>
+                </label>
+              </li>
+              <li>
+                <label>
+                  <input type="radio" name="topic" value="conversation" />
+                  <span class="filter-option-label">Conversation</span>
+                </label>
+              </li>
+              <li>
+                <label>
+                  <input type="radio" name="topic" value="deep-dive" />
+                  <span class="filter-option-label">Deep Dive</span>
+                </label>
+              </li>
+              <li>
+                <label>
+                  <input type="radio" name="topic" value="open-source" />
+                  <span class="filter-option-label">Open Source</span>
+                </label>
+              </li>
+              <li>
+                <label>
+                  <input type="radio" name="topic" value="experiments" />
+                  <span class="filter-option-label">Experiments</span>
+                </label>
+              </li>
+            </ul>
+          </fieldset>
+        </div>
+      </div>
+
+      <!-- Blog Posts Grid / List -->
+      <div class="blog-grid-container">
+        
+        <!-- Featured Grid (first 6) -->
+        <div class="blog-grid" style="display: grid;">
+          {featuredPosts.map((post) => (
+            <div class="blog-card" data-tags={post.data.tags?.map(t => t.toLowerCase().replace(' ', '-')).join(',') || ''}>
+              <a href={`/posts/${post.id}`}>
+                <div class="blog-image-wrapper">
+                  <img class="blog-image" src={post.data.image} alt={post.data.title} />
+                </div>
+                <span class="blog-tag">{post.data.tag}</span>
+                <h3 class="blog-title">{post.data.title}</h3>
+                <p class="blog-subtitle">{post.data.description}</p>
+                <span class="blog-date">{post.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              </a>
+            </div>
+          ))}
+        </div>
+
+        <!-- View Controls & Lower Grid -->
+        {remainingPosts.length > 0 && (
+          <div class="view-controls">
+            <div class="view-controls-right">
+              <button class="view-btn active" data-view="grid" aria-label="Grid view">Grid</button>
+              <button class="view-btn" data-view="list" aria-label="List view">List</button>
+            </div>
+          </div>
+          
+          <div class="blog-grid-lower shown view-grid">
+            <div class="list-header">
+              <span class="list-header-date">Date</span>
+              <span class="list-header-title">Title</span>
+              <span class="list-header-type">Type</span>
+            </div>
+            
+            {remainingPosts.map((post) => (
+              <div class="blog-card" data-tags={post.data.tags?.map(t => t.toLowerCase().replace(' ', '-')).join(',') || ''}>
+                <a href={`/posts/${post.id}`}>
+                  <div class="blog-image-wrapper">
+                    <img class="blog-image" src={post.data.image} alt={post.data.title} />
+                  </div>
+                  <span class="blog-tag">{post.data.tag}</span>
+                  <h3 class="blog-title">{post.data.title}</h3>
+                  <p class="blog-subtitle">{post.data.description}</p>
+                  <span class="blog-date">{post.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                </a>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1. Initial Intro Animation
+    const homeMain = document.querySelector('.home-main');
+    if (homeMain) {
+      homeMain.style.transition = 'opacity 0.6s ease';
+      homeMain.style.opacity = '1';
+    }
+
+    const viewControls = document.querySelector('.view-controls');
+    if (viewControls) {
+      viewControls.style.display = 'flex';
+      setTimeout(() => {
+        viewControls.style.transition = 'opacity 0.4s ease';
+        viewControls.style.opacity = '1';
+      }, 100);
+    }
+
+    const filterTitle = document.querySelector('.filter-title');
+    if (filterTitle) {
+      filterTitle.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+      filterTitle.style.opacity = '1';
+      filterTitle.style.transform = 'none';
+    }
+
+    const filterItems = document.querySelectorAll('.filter-list li');
+    filterItems.forEach((item, index) => {
+      setTimeout(() => {
+        item.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        item.style.opacity = '1';
+        item.style.transform = 'none';
+      }, 50 + index * 40);
+    });
+
+    const cards = document.querySelectorAll('.blog-card');
+    cards.forEach((card, cardIndex) => {
+      const img = card.querySelector('.blog-image');
+      const tag = card.querySelector('.blog-tag');
+      const title = card.querySelector('.blog-title');
+      const subtitle = card.querySelector('.blog-subtitle');
+      const date = card.querySelector('.blog-date');
+
+      const els = [img, tag, title, subtitle, date].filter(Boolean);
+      els.forEach((el, elIndex) => {
+        setTimeout(() => {
+          el.style.transition = 'opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+          el.style.opacity = '1';
+          el.style.transform = 'none';
+        }, 150 + cardIndex * 80 + elIndex * 40);
+      });
+    });
+
+    // Make footer visible
+    const footer = document.querySelector('.site-footer');
+    if (footer) {
+      footer.classList.add('visible');
+    }
+
+    // 2. Grid vs List View switcher
+    const viewButtons = document.querySelectorAll('.view-btn');
+    const blogGridLower = document.querySelector('.blog-grid-lower');
+
+    viewButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const view = btn.getAttribute('data-view');
+        
+        viewButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        if (blogGridLower) {
+          if (view === 'grid') {
+            blogGridLower.classList.remove('view-list');
+            blogGridLower.classList.add('view-grid');
+          } else {
+            blogGridLower.classList.remove('view-grid');
+            blogGridLower.classList.add('view-list');
+          }
+        }
+      });
+    });
+
+    // 3. Topics filtering logic
+    const filterRadios = document.querySelectorAll('.filter-list input[type="radio"]');
+    const filterToggleCurrent = document.querySelector('.filter-toggle-current');
+    const filterToggle = document.querySelector('.filter-toggle');
+    const filtersContainer = document.querySelector('.filters');
+    const blogCards = document.querySelectorAll('.blog-card');
+
+    if (filterToggle) {
+      filterToggle.addEventListener('click', () => {
+        const isOpen = filtersContainer.classList.toggle('is-open');
+        filterToggle.setAttribute('aria-expanded', isOpen);
+      });
+    }
+
+    filterRadios.forEach(radio => {
+      radio.addEventListener('change', () => {
+        const val = radio.value.toLowerCase().replace(' ', '-');
+        const labelText = radio.closest('label').querySelector('.filter-option-label').textContent;
+        if (filterToggleCurrent) {
+          filterToggleCurrent.textContent = labelText;
+        }
+        
+        if (filtersContainer) {
+          filtersContainer.classList.remove('is-open');
+        }
+        if (filterToggle) {
+          filterToggle.setAttribute('aria-expanded', 'false');
+        }
+
+        blogCards.forEach(card => {
+          const cardTagsAttr = card.getAttribute('data-tags') || '';
+          const cardTags = cardTagsAttr.split(',').map(t => t.trim());
+          if (val === 'all' || cardTags.includes(val)) {
+            card.style.display = '';
+            // Force reset opacity in case it was not finished animating
+            const els = card.querySelectorAll('.blog-image, .blog-tag, .blog-title, .blog-subtitle, .blog-date');
+            els.forEach(el => el.style.opacity = '1');
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+  });
+</script>
