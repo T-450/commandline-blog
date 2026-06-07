@@ -68,7 +68,7 @@ const remainingPosts = sortedPosts.slice(6);
         <div class="blog-grid" style="display: grid;">
           {featuredPosts.map((post) => (
             <div class="blog-card" data-tags={post.data.tags?.map(t => t.toLowerCase().replace(' ', '-')).join(',') || ''}>
-              <a href={`/posts/${post.id}`}>
+              <a href={`${import.meta.env.BASE_URL}/posts/${post.id}`}>
                 <div class="blog-image-wrapper">
                   <img class="blog-image" src={post.data.image} alt={post.data.title} />
                 </div>
@@ -99,7 +99,7 @@ const remainingPosts = sortedPosts.slice(6);
             
             {remainingPosts.map((post) => (
               <div class="blog-card" data-tags={post.data.tags?.map(t => t.toLowerCase().replace(' ', '-')).join(',') || ''}>
-                <a href={`/posts/${post.id}`}>
+                <a href={`${import.meta.env.BASE_URL}/posts/${post.id}`}>
                   <div class="blog-image-wrapper">
                     <img class="blog-image" src={post.data.image} alt={post.data.title} />
                   </div>

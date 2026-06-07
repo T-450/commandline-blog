@@ -95,7 +95,7 @@ const relatedPosts = allPosts
         <h2 class="related-heading">Next Stop</h2>
         <div class="related-grid">
           {relatedPosts.map(rel => (
-            <a class="related-card" href={`/posts/${rel.id}`}>
+            <a class="related-card" href={`${import.meta.env.BASE_URL}/posts/${rel.id}`}>
               <div class="related-card-header">
                 <h3 class="related-card-title">{rel.data.title}</h3>
                 <span class="related-card-tag">{rel.data.tag}</span>

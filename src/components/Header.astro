@@ -15,8 +15,8 @@ const searchData = posts.map(p => ({
 <div class="header-wrapper">
   <header style="transform:translateY(0)">
     <div class="col-1">
-      <a class="site-logo" href="/" aria-label="Command Line">
-        <img class="site-logo-image" src="/logo.svg" alt="" aria-hidden="true" />
+      <a class="site-logo" href={import.meta.env.BASE_URL} aria-label="Command Line">
+        <img class="site-logo-image" src={`${import.meta.env.BASE_URL}/logo.svg`} alt="" aria-hidden="true" />
       </a>
     </div>
     <div class="col-3">
@@ -51,7 +51,7 @@ const searchData = posts.map(p => ({
   <div class="search-results" id="site-search-results" aria-live="polite"></div>
 </div>
 
-<script is:inline define:vars={{ searchData }}>
+<script is:inline define:vars={{ searchData, baseUrl: import.meta.env.BASE_URL }}>
   document.addEventListener('DOMContentLoaded', () => {
     const searchBtn = document.querySelector('.search-btn');
     const themeToggle = document.querySelector('.theme-toggle');
@@ -144,7 +144,7 @@ const searchData = posts.map(p => ({
         }
 
         searchResults.innerHTML = filtered.map(post => `
-          <a class="search-result" href="/posts/${post.slug}">
+          <a class="search-result" href="${baseUrl}/posts/${post.slug}">
             <div class="search-result-title">${escapeHTML(post.title)}</div>
             <div class="search-result-meta">${post.date} • ${escapeHTML(post.tag || '')} • By ${escapeHTML(post.author)}</div>
           </a>
