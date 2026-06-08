@@ -70,7 +70,7 @@ const remainingPosts = sortedPosts.slice(6);
             <div class="blog-card" data-tags={post.data.tags?.map(t => t.toLowerCase().replace(' ', '-')).join(',') || ''}>
               <a href={`${import.meta.env.BASE_URL}/posts/${post.id}`}>
                 <div class="blog-image-wrapper">
-                  <img class="blog-image" src={post.data.image} alt={post.data.title} />
+                  <img class="blog-image" src={post.data.image} alt={post.data.title} onerror="this.style.display='none'" />
                 </div>
                 <span class="blog-tag">{post.data.tag}</span>
                 <h3 class="blog-title">{post.data.title}</h3>
@@ -101,7 +101,7 @@ const remainingPosts = sortedPosts.slice(6);
               <div class="blog-card" data-tags={post.data.tags?.map(t => t.toLowerCase().replace(' ', '-')).join(',') || ''}>
                 <a href={`${import.meta.env.BASE_URL}/posts/${post.id}`}>
                   <div class="blog-image-wrapper">
-                    <img class="blog-image" src={post.data.image} alt={post.data.title} />
+                    <img class="blog-image" src={post.data.image} alt={post.data.title} onerror="this.style.display='none'" />
                   </div>
                   <span class="blog-tag">{post.data.tag}</span>
                   <h3 class="blog-title">{post.data.title}</h3>
@@ -112,6 +112,7 @@ const remainingPosts = sortedPosts.slice(6);
             ))}
           </div>
         )}
+        <div id="no-results-message" style="display:none;text-align:center;padding:60px 20px;color:#666;font-size:1.1rem;">No articles found for this topic.</div>
       </div>
     </div>
   </main>
@@ -239,6 +240,10 @@ const remainingPosts = sortedPosts.slice(6);
             card.style.display = 'none';
           }
         });
+        var hasVisible = false;
+        blogCards.forEach(function(c){if(c.style.display !== 'none') hasVisible = true;});
+        var msg = document.getElementById('no-results-message');
+        if(msg) msg.style.display = hasVisible ? 'none' : 'block';
       });
     });
   });

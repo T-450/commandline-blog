@@ -4,7 +4,7 @@ date: 2026-06-04
 author: "Command Line team"
 description: "Long-time listener, first-time caller. Dive into a detailed conversation that breaks down the news from Build and what it means for the developer ecosystem."
 tags: []
-tag: "Article"
+tag: "Conversation"
 image: "https://commandline.microsoft.com/wp-content/uploads/2026/06/watch-satya-nadella-on-a-no-priors-x-latent-space-crossover-special-card.svg"
 ---
 
